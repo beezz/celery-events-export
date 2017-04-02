@@ -12,13 +12,12 @@ class Exporter:
         self.conf = conf
         self.name = self.conf.get('name', str(uuid.uuid4()))
         self._bulk_size = self.conf.get('bulk_size', 1)
-        self._normalize_timestamp = self.conf.get('normalize_timestamp', True)
+        self._apply_utcoffset = self.conf.get('apply_utcoffset', True)
         self._add_timestamp = self.conf.get('add_timestamp', 'ts')
         self.log = logging.getLogger('celery_events_export.exporter.%s' % self.name)
 
-    def normalize_event_timestamp(self, event):
-        """Removes ``utcoffset`` from event's timestamp.
-        """
+    def apply_utcoffset(self, event):
+        """Applies ``utcoffset``to event's timestamp."""
         event['ts'] += timedelta(hours=event['utcoffset'])
 
     def add_event_timestamp(self, event):
@@ -28,12 +27,12 @@ class Exporter:
         False or None, no additional timestamp field to the existing one in a
         form of unix timestamp will be added.
 
-        In addition, if setting ``normalize_timestamp`` is set to True,
+        In addition, if setting ``apply_utcoffset`` is set to True,
         ``event['utcoffset']`` will be applied.
         """
         event['ts'] = datetime.fromtimestamp(event['timestamp'])
-        if self._normalize_timestamp:
-            self.normalize_event_timestamp(event)
+        if self._apply_utcoffset:
+            self.apply_utcoffset(event)
 
     def export_event(self, event, state):
         event = event.copy()
