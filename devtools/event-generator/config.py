@@ -30,9 +30,9 @@ events_export = [
             [['http://elastic:changeme@localhost:9200']],
             {},
         ),
-        'index': 'celery-events',
+        'index': 'celery-events-%Y-%m-%d',
         'add_timestamp': 'ts',
-        'normalize_timestamp': True,
-        'bulk_size': 1,
+        'apply_utcoffset': True,
+        'bulk_size': 10,
     },
 ]
