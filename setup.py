@@ -4,7 +4,7 @@ setup(
     name='celery-events-export',
     entry_points={
         'celery.commands': [
-            'export = celery_events_export.cmd:ExportCommand',
+            'events_export = celery_events_export.cmd:ExportCommand',
         ]
     }
 )
