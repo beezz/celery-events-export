@@ -47,12 +47,26 @@ class Elasticsearch(Exporter):
         super().__init__(conf)
         self._es = None
         self._buffer = []
+        self._index_pattern = not (
+            self.conf['index'] == datetime.now().strftime(self.conf['index']))
+
+    def get_event_index(self, event):
+        """Uses ``event``'s timestamp to format time-based index pattern.
+        """
+        if self._index_pattern:
+            if self._add_timestamp:
+                ts = event[self._add_timestamp]
+            else:
+                ts = datetime.fromtimestamp(event['timestamp'])
+            return ts.strftime(self.conf['index'])
+        else:
+            return self.conf['index']
 
     def bulk_action_from_event(self, event):
         """Transforms an event into elasticsearch's bulk action
         """
         return {
-            '_index': self.conf['index'],
+            '_index': self.get_event_index(event),
             '_type': event['type'],
             '_source': event,
         }
