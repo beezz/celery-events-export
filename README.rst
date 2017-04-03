@@ -3,7 +3,7 @@
 Celery events export
 ====================
 
-Monitor and export `Celery <http://www.celeryproject.org/>` worker events.
+Monitor and export `Celery <http://www.celeryproject.org/>`_ worker events.
 
 
 Installation
