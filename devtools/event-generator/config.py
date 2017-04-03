@@ -27,8 +27,7 @@ events_export = {
     'limit': None,
     'timeout': None,
     'wakeup': True,
-    'exporters': [
-        {
+    'exporter': {
             'name': 'elastic',
             'type': 'elasticsearch',
             'connection': (
@@ -39,8 +38,7 @@ events_export = {
             'add_timestamp': 'ts',
             'apply_utcoffset': True,
             'bulk_size': 10,
-        },
-    ]
+    }
 }
 
 

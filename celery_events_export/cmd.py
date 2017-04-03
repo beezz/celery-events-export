@@ -14,22 +14,24 @@ class ExportCommand(Command):
 
     def export_event(self, event):
         self._state.event(event)
-        for exporter in self._exporters:
-            exporter.export_event(event, self._state)
+        self._exporter.export_event(event, self._state)
 
     def run(self, *args, **kwargs):
         self._conf = self.app.conf.events_export
         self._state = self.app.events.State()
-        self._exporters = [
-            exporters.from_type(conf['type'])(conf)
-            for conf in self._conf.get('exporters', [])
-        ]
+        try:
+            exporter_conf = self._conf['exporter']
+        except KeyError:
+            system.exit('Missing exporter configuration.')
+        try:
+            exporter_type = exporter_conf['type']
+        except KeyError:
+            system.exit('Missing exporter\'s type configuration option.')
+        self._exporter = exporters.from_type(exporter_type)(exporter_conf)
         logger.info(
-                'Configured %d exporter(s). Types: %s',
-            len(self._exporters),
-            [_.conf['type'] for _ in self._exporters])
-        if not self._exporters:
-            sys.exit('Please configure at least one exporter.')
+            'Exporter `%s` of type `%s` created.',
+            self._exporter.name,
+            exporter_type)
         with self.app.connection() as connection:
             recv = self.app.events.Receiver(
                 connection,
