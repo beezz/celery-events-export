@@ -126,12 +126,3 @@ ALL_EXPORTERS = {'elasticsearch': Elasticsearch}
 
 def from_type(type):
     return ALL_EXPORTERS[type]
-
-
-def guess_exporter_type(cli_options):
-    """Guess exporter type from cli-options prefix."""
-    cli_prefixes = {cls.args_prefix: name for name, cls in ALL_EXPORTERS.items()}
-    for option_name in cli_options.keys():
-        for cli_prefix in cli_prefixes.keys():
-            if option_name.startswith('{}_'.format(cli_prefix)):
-                return cli_prefixes[cli_prefix]
