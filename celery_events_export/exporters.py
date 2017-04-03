@@ -8,13 +8,22 @@ from elasticsearch import helpers as es_helpers
 
 class Exporter:
 
-    def __init__(self, conf):
+    def __init__(self, conf, cli_options):
         self.conf = conf
+        self.cli_options = cli_options
         self.name = self.conf.get('name', str(uuid.uuid4()))
         self._bulk_size = self.conf.get('bulk_size', 1)
         self._apply_utcoffset = self.conf.get('apply_utcoffset', True)
         self._add_timestamp = self.conf.get('add_timestamp', 'ts')
         self.log = logging.getLogger('celery_events_export.exporter.%s' % self.name)
+        self.finalize_options()
+
+    @classmethod
+    def add_arguments(cls, parser):
+        """Adds custom command line argument options."""
+
+    def finalize_options(self):
+        """Merges configuration with command line options."""
 
     def apply_utcoffset(self, event):
         """Applies ``utcoffset``to event's timestamp."""
@@ -43,12 +52,26 @@ class Exporter:
 
 class Elasticsearch(Exporter):
 
-    def __init__(self, conf):
-        super().__init__(conf)
+    def __init__(self, conf, cli_options):
+        super().__init__(conf, cli_options)
         self._es = None
         self._buffer = []
         self._index_pattern = not (
             self.conf['index'] == datetime.now().strftime(self.conf['index']))
+
+    @classmethod
+    def add_arguments(cls, parser):
+        group = parser.add_argument_group('Elasticsearch options')
+        group.add_argument(
+            '--es-url',
+            help='Elasticsearch connection url')
+        group.add_argument(
+            '--es-index',
+            help='Index pattern. (celery-event-%Y-%m-%d)')
+
+    def finalize_options(self):
+        clio, conf = self.cli_options, self.conf
+        self.conf['index'] = clio['es_index'] or conf.get('index', 'celery-events-%Y-%m-%d')
 
     def get_event_index(self, event):
         """Uses ``event``'s timestamp to format time-based index pattern.
@@ -75,7 +98,10 @@ class Elasticsearch(Exporter):
     def es(self):
         """Elasticsearch client."""
         if self._es is None:
-            conargs, conkwargs = self.conf['connection']
+            if self.cli_options.get('es_url'):
+                conargs, conkwargs = [self.cli_options.get('es_url')], {}
+            else:
+                conargs, conkwargs = self.conf['connection']
             self.log.info('Creating Elasticsearch client')
             self._es = elasticsearch.Elasticsearch(*conargs, **conkwargs)
         return self._es
@@ -94,5 +120,18 @@ class Elasticsearch(Exporter):
             es_helpers.bulk(self.es, events, chunk_size=self._bulk_size)
 
 
+# TODO: Use extensions and pkg_resources to make this dynamic
+ALL_EXPORTERS = {'elasticsearch': Elasticsearch}
+
+
 def from_type(type):
-    return {'elasticsearch': Elasticsearch}[type]
+    return ALL_EXPORTERS[type]
+
+
+def guess_exporter_type(cli_options):
+    """Guess exporter type from cli-options prefix."""
+    cli_prefixes = {cls.args_prefix: name for name, cls in ALL_EXPORTERS.items()}
+    for option_name in cli_options.keys():
+        for cli_prefix in cli_prefixes.keys():
+            if option_name.startswith('{}_'.format(cli_prefix)):
+                return cli_prefixes[cli_prefix]
