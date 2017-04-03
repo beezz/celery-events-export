@@ -63,7 +63,7 @@ class Elasticsearch(Exporter):
             return self.conf['index']
 
     def bulk_action_from_event(self, event):
-        """Transforms an event into elasticsearch's bulk action
+        """Transforms an event into elasticsearch's bulk action.
         """
         return {
             '_index': self.get_event_index(event),
@@ -73,6 +73,7 @@ class Elasticsearch(Exporter):
 
     @property
     def es(self):
+        """Elasticsearch client."""
         if self._es is None:
             conargs, conkwargs = self.conf['connection']
             self.log.info('Creating Elasticsearch client')
