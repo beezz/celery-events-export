@@ -22,17 +22,27 @@ imports = (
 # Message serialization format used when sending event messages.
 # event_serializer = 'json'
 
-events_export = [
-    {
-        'name': 'elastic',
-        'type': 'elasticsearch',
-        'connection': (
-            [['http://elastic:changeme@localhost:9200']],
-            {},
-        ),
-        'index': 'celery-events-%Y-%m-%d',
-        'add_timestamp': 'ts',
-        'apply_utcoffset': True,
-        'bulk_size': 10,
-    },
-]
+events_export = {
+    'event_type': '*',
+    'limit': None,
+    'timeout': None,
+    'wakeup': True,
+    'exporters': [
+        {
+            'name': 'elastic',
+            'type': 'elasticsearch',
+            'connection': (
+                [['http://elastic:changeme@localhost:9200']],
+                {},
+            ),
+            'index': 'celery-events-%Y-%m-%d',
+            'add_timestamp': 'ts',
+            'apply_utcoffset': True,
+            'bulk_size': 10,
+        },
+    ]
+}
+
+
+import logging
+logging.basicConfig(level=logging.INFO)
