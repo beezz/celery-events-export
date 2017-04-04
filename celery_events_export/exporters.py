@@ -27,7 +27,7 @@ class Exporter:
 
     def apply_utcoffset(self, event):
         """Applies ``utcoffset``to event's timestamp."""
-        event['ts'] += timedelta(hours=event['utcoffset'])
+        event[self._add_timestamp] += timedelta(hours=event['utcoffset'])
 
     def add_event_timestamp(self, event):
         """Adds event timestamp as a python's datetime object.
@@ -39,7 +39,7 @@ class Exporter:
         In addition, if setting ``apply_utcoffset`` is set to True,
         ``event['utcoffset']`` will be applied.
         """
-        event['ts'] = datetime.fromtimestamp(event['timestamp'])
+        event[self._add_timestamp] = datetime.fromtimestamp(event['timestamp'])
         if self._apply_utcoffset:
             self.apply_utcoffset(event)
 
