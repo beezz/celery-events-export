@@ -43,8 +43,19 @@ class Exporter:
         if self._apply_utcoffset:
             self.apply_utcoffset(event)
 
+    def add_task_name(self, event, state):
+        """Adds task name to event data.
+
+        As Celery documentation note, task name is sent only with -received
+        event and state keeps track of this.
+        """
+        if event['uuid'] in state.tasks:
+            event['task_name'] = state.tasks[event['uuid']].name
+
     def export_event(self, event, state):
         event = event.copy()
+        if 'uuid' in event:
+            self.add_task_name(event, state)
         if self._add_timestamp:
             self.add_event_timestamp(event)
         self._export_event(event, state)
