@@ -38,3 +38,9 @@ class TestExporter:
         event = {'uuid': uuid}
         ex.add_task_name(event, state)
         assert event['task_name'] == 'task_name'
+
+
+class TestElasticSearch:
+
+    def test_init(self):
+        ex = exporters.Elasticsearch({}, {'es_index': 'cee'})

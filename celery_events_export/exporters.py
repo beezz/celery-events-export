@@ -1,5 +1,8 @@
+"""
+celery_events_export.exporters
+==============================
+"""
 import logging
-import time
 import uuid
 from datetime import datetime, timedelta
 
@@ -7,7 +10,12 @@ import elasticsearch
 from elasticsearch import helpers as es_helpers
 
 
-class Exporter:
+class Exporter(object):
+    """Base class for different types of exporters.
+
+    :class:`Exporter` subclass must implement ``_export_event(event, state)``
+    method which do the actual exporting work.
+    """
 
     def __init__(self, conf, cli_options):
         self.conf = conf
@@ -16,7 +24,8 @@ class Exporter:
         self._bulk_size = self.conf.get('bulk_size', 1)
         self._apply_utcoffset = self.conf.get('apply_utcoffset', True)
         self._add_timestamp = self.conf.get('add_timestamp', 'ts')
-        self.log = logging.getLogger('celery_events_export.exporter.%s' % self.name)
+        self.log = logging.getLogger(
+            'celery_events_export.exporter.%s' % self.name)
         self.finalize_options()
 
     @classmethod
@@ -53,6 +62,10 @@ class Exporter:
         if event['uuid'] in state.tasks:
             event['task_name'] = state.tasks[event['uuid']].name
 
+    def _export_event(self, event, state):
+        raise NotImplementedError(
+            'Exporter subclass must implement _export_event method')
+
     def export_event(self, event, state):
         event = event.copy()
         if 'uuid' in event:
@@ -65,7 +78,7 @@ class Exporter:
 class Elasticsearch(Exporter):
 
     def __init__(self, conf, cli_options):
-        super().__init__(conf, cli_options)
+        super(Elasticsearch, self).__init__(conf, cli_options)
         self._es = None
         self._buffer = []
         self._index_pattern = not (
@@ -83,7 +96,8 @@ class Elasticsearch(Exporter):
 
     def finalize_options(self):
         clio, conf = self.cli_options, self.conf
-        self.conf['index'] = clio['es_index'] or conf.get('index', 'celery-events-%Y-%m-%d')
+        self.conf['index'] = (
+            clio['es_index'] or conf.get('index', 'celery-events-%Y-%m-%d'))
 
     def get_event_index(self, event):
         """Uses ``event``'s timestamp to format time-based index pattern.
@@ -127,7 +141,7 @@ class Elasticsearch(Exporter):
             else:
                 events = None
         else:
-            events = [self.bulk_action_from_(event)]
+            events = [self.bulk_action_from_event(event)]
         if events:
             es_helpers.bulk(self.es, events, chunk_size=self._bulk_size)
 
