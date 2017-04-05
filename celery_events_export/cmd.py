@@ -1,8 +1,8 @@
-import sys
 import logging
+import sys
+
 from celery.bin.base import Command
 from celery_events_export import exporters
-
 
 logger = logging.getLogger('celery_events_export.cmd')
 

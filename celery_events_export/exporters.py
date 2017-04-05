@@ -1,7 +1,8 @@
+import logging
 import time
 import uuid
-import logging
 from datetime import datetime, timedelta
+
 import elasticsearch
 from elasticsearch import helpers as es_helpers
 

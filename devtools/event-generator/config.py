@@ -43,6 +43,7 @@ events_export = {
 
 
 import logging
+
 logging.basicConfig(level=logging.INFO)
 logging.getLogger('celery_events_export').setLevel(logging.DEBUG)
 logging.getLogger('celery_events_export.*').setLevel(logging.DEBUG)
