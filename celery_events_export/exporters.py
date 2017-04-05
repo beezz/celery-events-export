@@ -79,7 +79,7 @@ class Elasticsearch(Exporter):
             help='Elasticsearch connection url')
         group.add_argument(
             '--es-index',
-            help='Index pattern. (celery-event-%Y-%m-%d)')
+            help='Index pattern. (celery-event-%%Y-%%m-%%d)')
 
     def finalize_options(self):
         clio, conf = self.cli_options, self.conf
