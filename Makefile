@@ -2,6 +2,11 @@ VENV = .venv
 PYTHON = python3
 
 
+sort-imports:
+	@echo "Sorting imports (isort)"
+	@isort -rc celery_events_export
+
+
 install-venv:
 	@echo "Installing Python virtualenv"
 	@virtualenv -p $(PYTHON) $(VENV)
